@@ -28,17 +28,17 @@ public class LoggingAspect {
 
     @Around("@annotation(com.smile.pocannotation.annotation.Logging)")
     public Object logging(ProceedingJoinPoint jp) throws Throwable {
-        logger.info("headers : {} body : {}", getHeaders(request), getBody(request));
+        logger.info("INBOUND headers : {} body : {}", getRequestHeaders(request), getRequestBody(request));
         return jp.proceed();
     }
 
-    private String getBody(HttpServletRequest request) throws IOException {
+    private String getRequestBody(HttpServletRequest request) throws IOException {
         String body = request.getReader().lines().collect(Collectors.joining());
         String contentType = request.getContentType();
         return contentType == null ? new HashMap<>().toString() : objectMapper.readValue(body, Object.class).toString();
     }
 
-    private String getHeaders(HttpServletRequest request) {
+    private String getRequestHeaders(HttpServletRequest request) {
         Map<String, String> header = new HashMap<>();
         request.getHeaderNames().asIterator().forEachRemaining(entry -> header.put(entry, request.getHeader(entry)));
         return header.toString();
