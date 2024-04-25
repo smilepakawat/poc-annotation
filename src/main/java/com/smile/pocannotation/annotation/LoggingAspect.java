@@ -1,46 +1,43 @@
 package com.smile.pocannotation.annotation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.RequiredArgsConstructor;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.NonNull;
+import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.stream.Collectors;
-
 @Aspect
+@Slf4j
 @Component
-@RequiredArgsConstructor(onConstructor = @__(@Autowired))
 public class LoggingAspect {
-    Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
-    private final @NonNull HttpServletRequest request;
-    private final ObjectMapper objectMapper;
+    private final HttpServletRequest request;
+
+    public LoggingAspect(HttpServletRequest request) {
+        this.request = request;
+    }
 
     @Around("@annotation(com.smile.pocannotation.annotation.Logging)")
     public Object logging(ProceedingJoinPoint jp) throws Throwable {
-        logger.info("INBOUND headers : {} body : {}", getRequestHeaders(request), getRequestBody(request));
+        log.info("header {}", getRequestHeaders(request));
+        log.info("body {}", getPayload(jp));
         return jp.proceed();
     }
 
-    private String getRequestBody(HttpServletRequest request) throws IOException {
-        String body = request.getReader().lines().collect(Collectors.joining());
-        String contentType = request.getContentType();
-        return contentType == null ? new HashMap<>().toString() : objectMapper.readValue(body, Object.class).toString();
+    private String getPayload(JoinPoint joinPoint) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < joinPoint.getArgs().length; i++) {
+            builder.append(joinPoint.getArgs()[i].toString());
+            builder.append(", ");
+        }
+        return builder.toString();
     }
 
     private String getRequestHeaders(HttpServletRequest request) {
-        Map<String, String> header = new HashMap<>();
-        request.getHeaderNames().asIterator().forEachRemaining(entry -> header.put(entry, request.getHeader(entry)));
-        return header.toString();
+        JSONObject headers = new JSONObject();
+        request.getHeaderNames().asIterator().forEachRemaining(entry -> headers.put(entry, request.getHeader(entry)));
+        return headers.toString();
     }
 }
