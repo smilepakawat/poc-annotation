@@ -9,6 +9,9 @@ import org.aspectj.lang.annotation.Aspect;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 @Aspect
 @Slf4j
 @Component
@@ -21,18 +24,15 @@ public class LoggingAspect {
 
     @Around("@annotation(com.smile.pocannotation.annotation.Logging)")
     public Object logging(ProceedingJoinPoint jp) throws Throwable {
-        log.info("header {}", getRequestHeaders(request));
-        log.info("body {}", getPayload(jp));
-        return jp.proceed();
+        log.info("before {}", constructLogMsg(jp));
+        Object proceed = jp.proceed();
+        log.info("after {}", proceed.toString());
+        return proceed;
     }
 
-    private String getPayload(JoinPoint joinPoint) {
-        StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < joinPoint.getArgs().length; i++) {
-            builder.append(joinPoint.getArgs()[i].toString());
-            builder.append(", ");
-        }
-        return builder.toString();
+    private String constructLogMsg(JoinPoint jp) {
+        var args = Arrays.stream(jp.getArgs()).map(String::valueOf).collect(Collectors.joining(",", "", ""));
+        return request.getMethod() + "@" + request.getRequestURI() + ":" + getRequestHeaders(request) + args;
     }
 
     private String getRequestHeaders(HttpServletRequest request) {

@@ -2,7 +2,6 @@ package com.smile.pocannotation.controller;
 
 import com.smile.pocannotation.annotation.Logging;
 import com.smile.pocannotation.annotation.ValidateHeaders;
-import com.smile.pocannotation.model.ResponseModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -26,10 +25,10 @@ public class HelloWorldController {
 
     @PostMapping("/helloworld")
     @Logging
-    public ResponseEntity<String> postHelloWorld(
+    public ResponseEntity<Object> postHelloWorld(
             @RequestBody Object body
     ) {
-        return ResponseEntity.ok().headers(getResponseHeaders()).body("posting hello world success");
+        return ResponseEntity.ok().headers(getResponseHeaders()).body(body);
     }
 
     private HttpHeaders getResponseHeaders() {
