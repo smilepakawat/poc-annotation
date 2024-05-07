@@ -1,5 +1,6 @@
 package com.smile.pocannotation.annotation;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -12,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
-import jakarta.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,17 +25,17 @@ public class ValidateHeadersAspect {
     private final @NonNull HttpServletRequest request;
 
     @Around("@annotation(com.smile.pocannotation.annotation.ValidateHeaders)")
-    public Object validateAspect(ProceedingJoinPoint jp) throws Throwable {
+    public Object validateHeadersAspect(ProceedingJoinPoint jp) throws Throwable {
         MethodSignature signature = (MethodSignature) jp.getSignature();
         Method method = signature.getMethod();
         ValidateHeaders validateHeaders = method.getAnnotation(ValidateHeaders.class);
-        if (Boolean.FALSE.equals(isValidateHeaders(validateHeaders))) {
+        if (Boolean.FALSE.equals(isValidHeaders(validateHeaders))) {
             return ResponseEntity.badRequest().body("missing mandatory fields");
         }
         return jp.proceed();
     }
 
-    private Boolean isValidateHeaders(ValidateHeaders validateHeaders) {
+    private Boolean isValidHeaders(ValidateHeaders validateHeaders) {
         String[] values = validateHeaders.values();
         for (String s : values) {
             if (getAllHeaders().stream().noneMatch(e -> e.equalsIgnoreCase(s))) {
